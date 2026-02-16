@@ -4,8 +4,10 @@ infrastructure:
   google_nest:
     enabled: true
     device_id: "nest-device-001"
-    api_key: "YOUR_GOOGLE_NEST_API_KEY"
+    api_url: "https://smartdevicemanagement.googleapis.com/v1"
+    vault_path: "telehandler/google_nest"
     location: "Living Room"
+    event_types: [climate, environment, alert, alarm]
     settings:
       temperature_unit: "Celsius"
       motion_detection: true
@@ -14,8 +16,10 @@ infrastructure:
   amazon_echo:
     enabled: true
     device_id: "echo-device-001"
-    api_key: "YOUR_AMAZON_ECHO_API_KEY"
+    api_url: "https://api.amazonalexa.com/v3/events"
+    vault_path: "telehandler/amazon_echo"
     location: "Bedroom"
+    event_types: [alert, alarm]
     settings:
       voice_recognition: true
       volume_level: 5
@@ -24,7 +28,8 @@ infrastructure:
   security_system:
     enabled: true
     api_url: "https://security.example.com/api"
-    api_key: "YOUR_SECURITY_API_KEY"
+    vault_path: "telehandler/security_system"
+    event_types: [motion, intrusion, alert, alarm]
     settings:
       alarm_enabled: true
       notification_email: "security-alerts@example.com"
@@ -33,5 +38,3 @@ infrastructure:
           permissions: ["arm", "disarm", "view_logs"]
         - user: "guest"
           permissions: ["view_logs"]
-
-# Add more devices or settings as needed
