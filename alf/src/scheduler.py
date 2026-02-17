@@ -1,17 +1,20 @@
 import logging
 import signal
 import time
-from typing import Any, Optional
-
-from src.client import HarvestClient
+from typing import Any, Optional, Type
 
 log = logging.getLogger(__name__)
 
 
 class Scheduler:
     """
-    Micro-batch scheduler. Runs HarvestClient.run() on a configured
-    interval, indefinitely, with graceful SIGINT/SIGTERM shutdown.
+    Micro-batch scheduler. Runs client.run() on a configured interval,
+    indefinitely, with graceful SIGINT/SIGTERM shutdown.
+
+    The client_class parameter accepts any class whose constructor takes
+    (config_dir, data_dir) and whose run() returns a stats dict with
+    "records_fetched", "records_written", and "sites_failed" keys.
+    Defaults to HarvestClient (auction module).
     """
 
     def __init__(
@@ -19,8 +22,12 @@ class Scheduler:
         config_dir: str,
         data_dir: Optional[str] = None,
         batch_interval_secs: Optional[int] = None,
+        client_class: Optional[Type] = None,
     ) -> None:
-        self._client      = HarvestClient(config_dir=config_dir, data_dir=data_dir)
+        if client_class is None:
+            from src.client import HarvestClient
+            client_class = HarvestClient
+        self._client      = client_class(config_dir=config_dir, data_dir=data_dir)
         self._interval    = batch_interval_secs or self._client._settings.get(
             "batch_interval_seconds", 300
         )

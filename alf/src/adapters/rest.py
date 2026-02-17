@@ -8,7 +8,7 @@ from src.models import AuctionRecord
 log = logging.getLogger(__name__)
 
 # Wrapper keys to try when the response is a dict rather than a bare list
-_WRAPPER_KEYS = ("itemSummaries", "results", "data", "lots", "auctions", "items", "records")
+_WRAPPER_KEYS = ("itemSummaries", "vehicles", "listings", "results", "data", "lots", "auctions", "items", "records")
 
 
 class RestAdapter(BaseAdapter):
