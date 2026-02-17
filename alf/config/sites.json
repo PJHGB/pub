@@ -1,21 +1,23 @@
 {
   "sites": [
     {
-      "name": "classic_iron",
+      "name": "ebay_motors_uk",
       "enabled": true,
       "adapter": "rest",
-      "base_url": "https://api.classiciron.example.com/v2",
+      "base_url": "https://api.ebay.com",
       "auth": {
-        "type": "api_key",
-        "header": "X-Api-Key",
-        "env_var": "CLASSIC_IRON_API_KEY"
+        "type": "oauth2_client_credentials",
+        "token_url": "https://api.ebay.com/identity/v1/oauth2/token",
+        "client_id_env_var": "EBAY_CLIENT_ID",
+        "client_secret_env_var": "EBAY_CLIENT_SECRET",
+        "scope": "https://api.ebay.com/oauth/api_scope"
       },
       "endpoints": {
-        "auctions": "/auctions/results"
+        "auctions": "/buy/browse/v1/item_summary/search"
       },
       "rate_limit": {
-        "requests_per_second": 2.0,
-        "burst": 5
+        "requests_per_second": 5.0,
+        "burst": 10
       },
       "retry": {
         "max_attempts": 3,
@@ -23,112 +25,79 @@
         "retry_on_status": [429, 500, 502, 503, 504]
       },
       "default_params": {
-        "status": "sold",
-        "currency": "GBP",
-        "page_size": 100
+        "category_ids": "9801",
+        "filter": "buyingOptions:{AUCTION},itemEndDate:[..,..]",
+        "limit": 200,
+        "X-EBAY-C-MARKETPLACE-ID": "EBAY_GB"
       },
       "pagination": {
         "type": "offset",
-        "page_param": "page",
-        "page_size_param": "page_size",
-        "start_page": 1
+        "page_param": "offset",
+        "page_size_param": "limit",
+        "start_page": 0,
+        "offset_step": 200
       },
       "field_mapping": {
-        "id":            "auction_id",
-        "manufacturer":  "make",
-        "model":         "model_name",
-        "auction_date":  "end_date",
-        "sold_price":    "hammer_price",
-        "reserve_price": "reserve",
-        "start_price":   "opening_bid",
-        "currency":      "currency_code",
-        "lot_id":        "lot_number",
-        "url":           "listing_url"
+        "id":            "itemId",
+        "manufacturer":  null,
+        "model":         "title",
+        "auction_date":  "itemEndDate",
+        "sold_price":    "currentBidPrice.value",
+        "reserve_price": null,
+        "start_price":   "startingBidPrice.value",
+        "currency":      "currentBidPrice.currency",
+        "lot_id":        "itemId",
+        "url":           "itemWebUrl"
       }
     },
     {
-      "name": "auction_world",
-      "enabled": true,
-      "adapter": "rest",
-      "base_url": "https://www.auctionworld.example.net/api",
-      "auth": {
-        "type": "oauth2_client_credentials",
-        "token_url": "https://auth.auctionworld.example.net/oauth/token",
-        "client_id_env_var": "AUCTION_WORLD_CLIENT_ID",
-        "client_secret_env_var": "AUCTION_WORLD_CLIENT_SECRET",
-        "scope": "auctions:read"
-      },
-      "endpoints": {
-        "auctions": "/lots/completed"
-      },
-      "rate_limit": {
-        "requests_per_second": 1.0,
-        "burst": 3
-      },
-      "retry": {
-        "max_attempts": 4,
-        "backoff_factor": 1.5,
-        "retry_on_status": [429, 500, 503]
-      },
-      "default_params": {
-        "sold_only": true,
-        "limit": 50
-      },
-      "pagination": {
-        "type": "cursor",
-        "cursor_param": "cursor",
-        "cursor_response_field": "next_cursor"
-      },
-      "field_mapping": {
-        "id":            "id",
-        "manufacturer":  "brand",
-        "model":         "model",
-        "auction_date":  "sold_at",
-        "sold_price":    "final_price",
-        "reserve_price": "reserve_price",
-        "start_price":   "start_price",
-        "currency":      "currency",
-        "lot_id":        "lot_ref",
-        "url":           "url"
-      }
-    },
-    {
-      "name": "heritage_lots",
+      "name": "ebay_motors_us",
       "enabled": false,
       "adapter": "rest",
-      "base_url": "https://api.heritagelots.example.com",
+      "base_url": "https://api.ebay.com",
       "auth": {
-        "type": "basic",
-        "username_env_var": "HERITAGE_USERNAME",
-        "password_env_var": "HERITAGE_PASSWORD"
+        "type": "oauth2_client_credentials",
+        "token_url": "https://api.ebay.com/identity/v1/oauth2/token",
+        "client_id_env_var": "EBAY_CLIENT_ID",
+        "client_secret_env_var": "EBAY_CLIENT_SECRET",
+        "scope": "https://api.ebay.com/oauth/api_scope"
       },
       "endpoints": {
-        "auctions": "/search/sold"
+        "auctions": "/buy/browse/v1/item_summary/search"
       },
       "rate_limit": {
-        "requests_per_second": 0.5,
-        "burst": 1
+        "requests_per_second": 5.0,
+        "burst": 10
       },
       "retry": {
-        "max_attempts": 2,
-        "backoff_factor": 3.0,
-        "retry_on_status": [429, 500]
+        "max_attempts": 3,
+        "backoff_factor": 2.0,
+        "retry_on_status": [429, 500, 502, 503, 504]
       },
-      "default_params": {},
+      "default_params": {
+        "category_ids": "6001",
+        "filter": "buyingOptions:{AUCTION},itemEndDate:[..,..]",
+        "limit": 200,
+        "X-EBAY-C-MARKETPLACE-ID": "EBAY_US"
+      },
       "pagination": {
-        "type": "none"
+        "type": "offset",
+        "page_param": "offset",
+        "page_size_param": "limit",
+        "start_page": 0,
+        "offset_step": 200
       },
       "field_mapping": {
-        "id":            "ref",
-        "manufacturer":  "manufacturer",
-        "model":         "model",
-        "auction_date":  "date_sold",
-        "sold_price":    "sold",
-        "reserve_price": "reserve",
-        "start_price":   "estimate_low",
-        "currency":      "ccy",
-        "lot_id":        "lot",
-        "url":           "permalink"
+        "id":            "itemId",
+        "manufacturer":  null,
+        "model":         "title",
+        "auction_date":  "itemEndDate",
+        "sold_price":    "currentBidPrice.value",
+        "reserve_price": null,
+        "start_price":   "startingBidPrice.value",
+        "currency":      "currentBidPrice.currency",
+        "lot_id":        "itemId",
+        "url":           "itemWebUrl"
       }
     }
   ]

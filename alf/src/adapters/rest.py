@@ -8,7 +8,7 @@ from src.models import AuctionRecord
 log = logging.getLogger(__name__)
 
 # Wrapper keys to try when the response is a dict rather than a bare list
-_WRAPPER_KEYS = ("results", "data", "lots", "auctions", "items", "records")
+_WRAPPER_KEYS = ("itemSummaries", "results", "data", "lots", "auctions", "items", "records")
 
 
 class RestAdapter(BaseAdapter):
@@ -81,22 +81,27 @@ class RestAdapter(BaseAdapter):
     ) -> list[AuctionRecord]:
         page_param      = pagination.get("page_param", "page")
         page_size_param = pagination.get("page_size_param", "page_size")
-        page            = pagination.get("start_page", 1)
+        offset          = pagination.get("start_page", 1)
         page_size       = base_params.get(page_size_param, 100)
+        # offset_step=1  → traditional page-number APIs (page 1, 2, 3…)
+        # offset_step=N  → direct item-offset APIs like eBay (offset 0, 200, 400…)
+        step            = pagination.get("offset_step", 1)
         all_records: list[AuctionRecord] = []
+        page_count = 0
 
         while True:
-            params = {**base_params, page_param: page}
+            params = {**base_params, page_param: offset}
             raw    = self.fetcher.get(url, params=params)
             batch  = self.parse(raw)
             all_records.extend(batch)
+            page_count += 1
 
             if len(batch) < page_size:
                 break
-            page += 1
+            offset += step
 
         log.debug("[%s] offset pagination: %d total records across %d pages",
-                  self.config["name"], len(all_records), page)
+                  self.config["name"], len(all_records), page_count)
         return all_records
 
     def _fetch_cursor(
@@ -151,12 +156,25 @@ class RestAdapter(BaseAdapter):
         mapping: dict[str, str],
         source: str,
     ) -> AuctionRecord:
-        """Apply field_mapping to a single auction dict, returning an AuctionRecord."""
-        mapped_site_fields = set(mapping.values())
+        """Apply field_mapping to a single auction dict, returning an AuctionRecord.
+
+        field_mapping values support dot-notation for nested fields,
+        e.g. "currentBidPrice.value" extracts item["currentBidPrice"]["value"].
+        The top-level key of any mapped path is excluded from raw{}.
+        """
+        # Top-level keys covered by the mapping (may be "a.b.c" → top key "a")
+        mapped_top_keys = {v.split(".")[0] for v in mapping.values() if v}
 
         def _get(canonical: str) -> Any:
-            site_field = mapping.get(canonical)
-            return item.get(site_field) if site_field else None
+            path = mapping.get(canonical)
+            if not path:
+                return None
+            val: Any = item
+            for part in path.split("."):
+                if not isinstance(val, dict):
+                    return None
+                val = val.get(part)
+            return val
 
         def _to_float(v: Any) -> Optional[float]:
             if v is None:
@@ -180,7 +198,7 @@ class RestAdapter(BaseAdapter):
             log.debug("[%s] could not parse date %r — storing as-is", source, s)
             return s
 
-        raw = {k: v for k, v in item.items() if k not in mapped_site_fields}
+        raw = {k: v for k, v in item.items() if k not in mapped_top_keys}
 
         return AuctionRecord(
             id            = str(_get("id") or ""),
