@@ -2,7 +2,7 @@
   "batch_interval_seconds": 300,
   "max_workers": 6,
   "data_dir": "data",
-  "log_level": "INFO",
+  "log_level": "DEBUG",
   "retry": {
     "max_attempts": 3,
     "backoff_factor": 2.0,
